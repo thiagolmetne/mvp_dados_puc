@@ -1,0 +1,74 @@
+CREATE SCHEMA olimpiadas;
+
+CREATE TABLE olimpiadas.olympics_fact AS
+SELECT 
+    dados.ano,
+    dados.edicao,
+    dados.cidade_sede,
+    dados.pais,
+    dados.delegacao,
+    dados.sexo,
+    dados.idade,
+    dados.altura,
+    CASE WHEN dados.altura IS NULL THEN 1 ELSE 0 END AS missing_altura,
+    dados.esporte,
+    dados.evento,
+    dados.medalha,
+    COUNT(DISTINCT dados.id_atleta) AS total_atletas,
+    COUNT(DISTINCT dados.medalha) AS total_medalhas
+FROM 
+    basedosdados.mundo_kaggle_olimpiadas.microdados AS dados
+WHERE 
+    dados.evento = 'Summer' AND 
+    dados.ano >= 1988
+GROUP BY 
+    dados.ano,
+    dados.edicao,
+    dados.cidade_sede,
+    dados.pais,
+    dados.delegacao,
+    dados.sexo,
+    dados.idade,
+    dados.altura,
+    dados.esporte,
+    dados.evento,
+    dados.medalha;
+
+EXPORT DATA OPTIONS(
+  uri='gs://mvp_eng_dados/olympics_fact-*.csv',
+  format='CSV',
+  overwrite=true
+) AS
+SELECT * FROM olimpiadas.olympics_fact
+
+-- verificação de duplicidades;
+
+SELECT 
+    ano,
+    edicao,
+    cidade_sede,
+    pais,
+    delegacao,
+    sexo,
+    idade,
+    altura,
+    esporte,
+    evento,
+    COUNT(*) AS contador
+FROM 
+    olimpiadas.olympics_fact
+GROUP BY 
+    ano,
+    edicao,
+    cidade_sede,
+    pais,
+    delegacao,
+    sexo,
+    idade,
+    altura,
+    esporte,
+    evento
+HAVING 
+    COUNT(*) > 1
+ORDER BY 
+    contador DESC; 

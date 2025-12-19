@@ -1,0 +1,23 @@
+CREATE TABLE olimpiadas.medalhas_alt AS
+SELECT 
+    ano,
+    sexo,
+    Case when AVG(altura) is null then 'missing'
+        when AVG(altura) <= 160.0 then 'até 1.60m'
+        when AVG(altura) > 160.0 and AVG(altura) <= 170.0 then '1.61 a 1.70m'
+        when AVG(altura) > 170.0 and AVG(altura) <= 180.0 then '1.71 a 1.80m'
+        when AVG(altura) > 180.0 and AVG(altura) <= 190.0 then '1.81 a 1.90m'
+        when AVG(altura) > 190.0 and AVG(altura) <= 200.0 then '1.91 a 2.00m'
+        else 'acima de 2.00m'
+    end as altura_categoria,
+    AVG(altura)/100 AS media_altura,
+    COUNT(medalha) AS total_medalhas,
+    COUNT(distinct delegacao) as qtd_paises,
+    COUNT (total_atletas) as total_atletas
+FROM 
+    olimpiadas.olympics_fact o
+WHERE 
+    ano >= 1988 AND edicao IN ('Summer')
+GROUP BY 
+    ano,
+    sexo

@@ -1,0 +1,26 @@
+SELECT 
+    Entity,
+    Year,
+    CASE 
+        WHEN GDP_percapita = 0 THEN 1 
+        ELSE 0 
+    END AS ind_missing
+FROM 
+    `mvp-puc-olimpiadas.gpd_mundial.gpd_hist`
+GROUP BY 
+    Entity,
+    Year,
+    GDP_percapita
+
+CREATE TABLE `mvp-puc-olimpiadas.gpd_mundial.gpd_final` AS 
+SELECT 
+    Entity,
+    Code,
+    CAST(Year AS INT64) AS Year_2,
+    GDP_percapita,
+    World_region
+FROM 
+    `mvp-puc-olimpiadas.gpd_mundial.gpd_hist`
+WHERE 
+    Year NOT IN ('Afghanistan and Pakistan (WB)', '')
+    AND SAFE_CAST(Year AS INT64) IS NOT NULL  

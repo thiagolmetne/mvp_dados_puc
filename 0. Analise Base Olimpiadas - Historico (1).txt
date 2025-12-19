@@ -1,0 +1,16 @@
+SELECT
+    dados.ano as ano,
+    dados.edicao as edicao,
+    dados.cidade_sede as cidade_sede,
+    dados.pais as pais,
+    dados.delegacao as delegacao,
+    dados.equipe as equipe,
+    dados.id_atleta as id_atleta,
+    dados.sexo as sexo,
+    dados.idade as idade,
+    dados.altura as altura,
+    dados.peso as peso,
+    dados.esporte as esporte,
+    dados.evento as evento,
+    dados.medalha as medalha
+FROM `basedosdados.mundo_kaggle_olimpiadas.microdados` AS dados

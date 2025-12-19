@@ -1,0 +1,52 @@
+CREATE TABLE olimpiadas.gpd_medalha AS
+WITH ranked_gdp AS (
+    SELECT 
+        o.ano,
+        o.delegacao,
+        g.gdp_percapita,
+        NTILE(10) OVER (ORDER BY g.gdp_percapita DESC) AS gdp_rank,
+        SUM(CASE WHEN o.medalha IS NOT NULL THEN 1 ELSE 0 END) AS total_medalhas  -- Contando apenas as medalhas
+    FROM 
+        olimpiadas.olympics_fact o
+    JOIN 
+        olimpiadas.gpd_fact g ON o.delegacao = g.code AND o.ano = g.year_2
+    WHERE 
+        o.ano >= 1988 AND o.edicao IN ('Summer')
+    GROUP BY 
+        o.ano, o.delegacao, g.gdp_percapita  -- Agrupando para contar medalhas
+)
+SELECT 
+    ano,
+    delegacao,
+    CASE 
+        WHEN gdp_rank = 1 THEN 'Alta Renda'  -- 10% mais ricos
+        WHEN gdp_rank BETWEEN 2 AND 8 THEN 'Média Renda'  -- 70% intermediários
+        WHEN gdp_rank = 9 THEN 'Baixa Renda'  -- 20% mais pobres
+    END AS nivel_renda,
+    TRUNC(AVG(gdp_percapita), 0) AS media_gdp,
+    SUM(total_medalhas) AS total_medalhas, 
+    COUNT(DISTINCT delegacao) AS qtd_paises  
+FROM 
+    ranked_gdp
+GROUP BY 
+    ano, delegacao, gdp_rank;
+
+    SELECT 
+    ano,
+    delegacao,
+    nivel_renda,
+    COUNT(*) AS contador 
+FROM (
+    SELECT 
+        ano,
+        delegacao,
+        nivel_renda, 
+    FROM 
+        olimpiadas.gpd_medalha
+) AS subquery
+GROUP BY 
+    ano, delegacao, nivel_renda
+HAVING 
+    COUNT(*) > 1  
+ORDER BY 
+    contador DESC;  

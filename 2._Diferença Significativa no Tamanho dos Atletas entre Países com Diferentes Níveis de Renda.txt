@@ -1,0 +1,29 @@
+
+CREATE TABLE olimpiadas.gpd_alt AS
+WITH ranked_gdp AS (
+    SELECT 
+        o.ano,
+        g.GDP_percapita,
+        NTILE(10) OVER (ORDER BY g.GDP_percapita DESC) AS gdp_rank,
+        o.delegacao,  -- Incluindo delegacao aqui
+        altura
+    FROM 
+        olimpiadas.olympics_fact o
+    JOIN 
+        olimpiadas.gpd_fact g ON o.delegacao = g.code AND o.ano = g.year_2
+    WHERE 
+        o.ano >= 1988 AND o.edicao IN ('Summer')
+)
+SELECT 
+    ano,
+    CASE 
+        WHEN gdp_rank = 1 THEN 'Alta Renda'  -- 10% mais ricos
+        WHEN gdp_rank BETWEEN 2 AND 8 THEN 'Média Renda'  -- 70% intermediários
+        WHEN gdp_rank = 9 THEN 'Baixa Renda'  -- 20% mais pobres
+    END AS nivel_renda,
+    TRUNC(AVG(altura) / 100, 2) AS media_altura,  -- Média de altura em metros
+    COUNT(DISTINCT delegacao) AS qtd_paises  -- Contando delegações
+FROM 
+    ranked_gdp
+GROUP BY 
+    ano, gdp_rank;
